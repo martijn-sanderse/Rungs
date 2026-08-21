@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Rungs — Calisthenics Progress</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1b1a17;
+    --surface:#242220;
+    --surface-2:#2c2a26;
+    --ink:#ede8dd;
+    --ink-dim:#a39c8c;
+    --ink-faint:#6f6a5e;
+    --line:#3a382f;
+    --line-soft:#302e28;
+
+    --c-vpush:#d69a2d;
+    --c-vpull:#5b92ae;
+    --c-hpush:#c1603f;
+    --c-hpull:#7a9b6e;
+    --c-core:#9b80b0;
+    --c-legs:#b7a03a;
+
+    --ready:#8fbf7a;
+    --danger:#c1603f;
+
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+
+    --radius: 6px;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+
+  #app{
+    max-width:480px;
+    margin:0 auto;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    background:
+      radial-gradient(ellipse at top, rgba(214,154,45,0.06), transparent 60%),
+      var(--bg);
+    position:relative;
+  }
+
+  header.top{
+    padding:22px 20px 14px;
+    border-bottom:1px solid var(--line);
+    position:sticky;
+    top:0;
+    background:var(--bg);
+    z-index:10;
+  }
+  header.top .brand{
+    font-family:var(--font-display);
+    font-size:32px;
+    letter-spacing:0.14em;
+    line-height:1;
+    color:var(--ink);
+  }
+  header.top .brand span{ color:var(--c-vpush); }
+  header.top .tagline{
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--ink-faint);
+    letter-spacing:0.04em;
+    margin-top:4px;
+    text-transform:uppercase;
+  }
+
+  main{
+    flex:1;
+    padding:18px 16px 90px;
+  }
+
+  nav.tabs{
+    position:fixed;
+    bottom:0;
+    left:0; right:0;
+    max-width:480px;
+    margin:0 auto;
+    display:flex;
+    background:var(--surface);
+    border-top:1px solid var(--line);
+    z-index:20;
+  }
+  nav.tabs button{
+    flex:1;
+    background:none;
+    border:none;
+    color:var(--ink-faint);
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    padding:12px 4px 10px;
+    cursor:pointer;
+    border-top:2px solid transparent;
+    transition:color .15s ease;
+  }
+  nav.tabs button.active{
+    color:var(--ink);
+    border-top-color:var(--c-vpush);
+  }
+  nav.tabs button:active{ opacity:0.7; }
+
+  h2.section-title{
+    font-family:var(--font-display);
+    font-size:22px;
+    letter-spacing:0.06em;
+    margin:0 0 12px;
+    color:var(--ink);
+  }
+
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:14px;
+    margin-bottom:12px;
+  }
+
+  select, input[type=text]{
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    color:var(--ink);
+    font-family:var(--font-body);
+    font-size:14px;
+    padding:9px 10px;
+    border-radius:var(--radius);
+    width:100%;
+  }
+  select:focus, input:focus, button:focus-visible{
+    outline:2px solid var(--c-vpush);
+    outline-offset:1px;
+  }
+
+  label.field-label{
+    font-family:var(--font-mono);
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--ink-faint);
+    display:block;
+    margin-bottom:6px;
+  }
+
+  /* ---- Routine picker ---- */
+  .routine-picker{ margin-bottom:16px; }
+
+  /* ---- Exercise log card ---- */
+  .exercise-card .ex-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:8px;
+  }
+  .exercise-card .ex-name{
+    font-weight:600;
+    font-size:15px;
+  }
+  .exercise-card .ex-cat{
+    font-family:var(--font-mono);
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    padding:2px 6px;
+    border-radius:4px;
+    white-space:nowrap;
+  }
+  .exercise-card .ex-cue{
+    font-size:12px;
+    color:var(--ink-dim);
+    margin-top:2px;
+    margin-bottom:10px;
+  }
+  .exercise-card .ex-target{
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--ink-faint);
+    margin-bottom:10px;
+  }
+
+  .stepper{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .stepper button{
+    width:34px; height:34px;
+    border-radius:50%;
+    border:1px solid var(--line);
+    background:var(--surface-2);
+    color:var(--ink);
+    font-size:18px;
+    cursor:pointer;
+    line-height:1;
+  }
+  .stepper button:active{ transform:scale(0.94); }
+  .stepper .val{
+    font-family:var(--font-mono);
+    font-size:18px;
+    min-width:70px;
+    text-align:center;
+  }
+
+  .segmented{
+    display:flex;
+    gap:6px;
+    margin-bottom:10px;
+  }
+  .segmented button{
+    flex:1;
+    padding:7px 4px;
+    border-radius:var(--radius);
+    border:1px solid var(--line);
+    background:var(--surface-2);
+    color:var(--ink-dim);
+    font-family:var(--font-mono);
+    font-size:11px;
+    text-transform:uppercase;
+    cursor:pointer;
+  }
+  .segmented button.on{
+    color:var(--bg);
+    border-color:transparent;
+  }
+
+  .failure-toggle{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:10px;
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--ink-dim);
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    cursor:pointer;
+  }
+  .failure-toggle input{ accent-color:var(--danger); width:15px; height:15px; }
+
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+    padding:9px 14px;
+    border-radius:var(--radius);
+    border:1px solid var(--line);
+    background:var(--surface-2);
+    color:var(--ink);
+    font-family:var(--font-mono);
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    cursor:pointer;
+    width:100%;
+  }
+  .btn:active{ transform:scale(0.98); }
+  .btn.primary{
+    background:var(--c-vpush);
+    border-color:var(--c-vpush);
+    color:#241c0c;
+    font-weight:700;
+  }
+  .btn.ghost{ background:transparent; }
+
+  .set-chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-bottom:10px;
+  }
+  .chip{
+    font-family:var(--font-mono);
+    font-size:11px;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    padding:4px 8px;
+    border-radius:20px;
+    color:var(--ink-dim);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:5px;
+  }
+  .chip.easy{ color:var(--ready); }
+  .chip.hard, .chip.fail{ color:var(--danger); }
+  .chip .x{ opacity:0.6; }
+
+  .finish-bar{
+    margin-top:16px;
+  }
+
+  /* ---- Ladders ---- */
+  .category-block{
+    margin-bottom:26px;
+  }
+  .category-header{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:10px;
+  }
+  .category-dot{
+    width:10px; height:10px;
+    border-radius:50%;
+    flex-shrink:0;
+  }
+  .category-header .cname{
+    font-family:var(--font-display);
+    font-size:18px;
+    letter-spacing:0.05em;
+  }
+
+  .ladder{
+    position:relative;
+    padding-left:22px;
+    display:flex;
+    flex-direction:column-reverse;
+    gap:10px;
+  }
+  .ladder::before{
+    content:'';
+    position:absolute;
+    left:9px; top:4px; bottom:4px;
+    width:2px;
+    background:var(--line);
+  }
+  .rung{
+    position:relative;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:10px 12px;
+  }
+  .rung::before{
+    content:'';
+    position:absolute;
+    left:-22px; top:50%;
+    transform:translateY(-50%);
+    width:12px; height:3px;
+    background:var(--line);
+    border-radius:2px;
+  }
+  .rung.passed{
+    opacity:0.55;
+  }
+  .rung.passed::before{ background: var(--cat-color, var(--ink-faint)); }
+  .rung.current{
+    border-color: var(--cat-color, var(--c-vpush));
+  }
+  .rung.current::before{
+    background: var(--cat-color, var(--c-vpush));
+    width:16px; height:4px; left:-25px;
+  }
+  .rung.locked{
+    opacity:0.4;
+  }
+  .rung.suggested{
+    box-shadow: 0 0 0 1px var(--ready), 0 0 14px 1px rgba(143,191,122,0.35);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce){
+    .rung.suggested{ animation:none; }
+  }
+  @keyframes pulse{
+    0%,100%{ box-shadow:0 0 0 1px var(--ready), 0 0 10px 0 rgba(143,191,122,0.25); }
+    50%{ box-shadow:0 0 0 1px var(--ready), 0 0 18px 2px rgba(143,191,122,0.45); }
+  }
+  .rung .r-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:8px;
+  }
+  .rung .r-name{ font-weight:600; font-size:14px; }
+  .rung .r-target{
+    font-family:var(--font-mono);
+    font-size:10px;
+    color:var(--ink-faint);
+  }
+  .rung .r-status{
+    font-family:var(--font-mono);
+    font-size:10px;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    margin-top:4px;
+  }
+  .rung .r-status.ready{ color:var(--ready); }
+  .rung .r-advance{
+    margin-top:8px;
+  }
+  .rung .r-advance button{
+    width:auto;
+    padding:6px 12px;
+    font-size:11px;
+  }
+
+  /* ---- Routines tab ---- */
+  .routine-card .r-title{
+    font-weight:700;
+    font-size:15px;
+    margin-bottom:6px;
+  }
+  .routine-card .r-list{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+  }
+  .routine-card .r-item{
+    font-family:var(--font-mono);
+    font-size:10px;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    padding:3px 7px;
+    border-radius:4px;
+    color:var(--ink-dim);
+  }
+
+  .new-routine-form .cat-group{
+    margin-bottom:12px;
+  }
+  .new-routine-form .cat-group-label{
+    font-family:var(--font-mono);
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color:var(--ink-faint);
+    margin-bottom:6px;
+  }
+  .checkbox-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:6px 0;
+    font-size:13px;
+  }
+  .checkbox-row input{ width:16px; height:16px; }
+
+  .empty-state{
+    text-align:center;
+    padding:40px 20px;
+    color:var(--ink-faint);
+    font-family:var(--font-mono);
+    font-size:12px;
+  }
+
+  .toast{
+    position:fixed;
+    bottom:80px;
+    left:50%;
+    transform:translateX(-50%);
+    background:var(--surface-2);
+    border:1px solid var(--ready);
+    color:var(--ink);
+    font-family:var(--font-mono);
+    font-size:12px;
+    padding:10px 16px;
+    border-radius:20px;
+    z-index:30;
+    box-shadow:0 4px 20px rgba(0,0,0,0.4);
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script type="module">
+import { h, render, Fragment } from 'https://esm.sh/preact@10.23.1';
+import { useState, useEffect, useMemo, useRef } from 'https://esm.sh/preact@10.23.1/hooks';
+import htm from 'https://esm.sh/htm@3.1.1';
+const html = htm.bind(h);
+
+/* ============================================================
+   CONSTANTS & SEED DATA
+   ============================================================ */
+
+const CATEGORIES = [
+  { key:'vertical_push',   label:'Vertical Push',   color:'var(--c-vpush)' },
+  { key:'vertical_pull',   label:'Vertical Pull',   color:'var(--c-vpull)' },
+  { key:'horizontal_push', label:'Horizontal Push', color:'var(--c-hpush)' },
+  { key:'horizontal_pull', label:'Horizontal Pull', color:'var(--c-hpull)' },
+  { key:'core',            label:'Core',            color:'var(--c-core)' },
+  { key:'legs',            label:'Legs',            color:'var(--c-legs)' },
+];
+const CAT_MAP = Object.fromEntries(CATEGORIES.map(c => [c.key, c]));
+
+const SEED_EXERCISES = [
+  { id:'vp1',  category:'vertical_push',   progressionOrder:1, name:'Pike Push-up',            unit:'reps', targetSets:3, targetReps:8,  cue:'Hips high, head toward the floor.' },
+  { id:'vp2',  category:'vertical_push',   progressionOrder:2, name:'Elevated Pike Push-up',    unit:'reps', targetSets:3, targetReps:6,  cue:'Feet on a box, deepen the shoulder load.' },
+
+  { id:'vpu1', category:'vertical_pull',   progressionOrder:1, name:'Dead Hang',                unit:'sec',  targetSets:3, targetReps:20, cue:'Active shoulders, relaxed grip.' },
+  { id:'vpu2', category:'vertical_pull',   progressionOrder:2, name:'Negative Pull-up',         unit:'reps', targetSets:3, targetReps:5,  cue:'5-second controlled descent each rep.' },
+
+  { id:'hp1',  category:'horizontal_push', progressionOrder:1, name:'Incline Push-up',          unit:'reps', targetSets:3, targetReps:10, cue:'Hands on a bench, straight body line.' },
+  { id:'hp2',  category:'horizontal_push', progressionOrder:2, name:'Push-up',                  unit:'reps', targetSets:3, targetReps:10, cue:'Floor push-up, full range of motion.' },
+
+  { id:'hpu1', category:'horizontal_pull', progressionOrder:1, name:'Inverted Row (high bar)',  unit:'reps', targetSets:3, targetReps:8,  cue:'Bar at waist height, body straight.' },
+  { id:'hpu2', category:'horizontal_pull', progressionOrder:2, name:'Inverted Row (low bar)',   unit:'reps', targetSets:3, targetReps:8,  cue:'Lower the bar, feet elevated slightly.' },
+
+  { id:'co1',  category:'core',            progressionOrder:1, name:'Plank',                    unit:'sec',  targetSets:3, targetReps:30, cue:'Neutral spine, brace the glutes.' },
+  { id:'co2',  category:'core',            progressionOrder:2, name:'Hollow Body Hold',         unit:'sec',  targetSets:3, targetReps:20, cue:'Lower back pressed to the floor.' },
+
+  { id:'le1',  category:'legs',            progressionOrder:1, name:'Bodyweight Squat',         unit:'reps', targetSets:3, targetReps:15, cue:'Full depth, knees track over toes.' },
+  { id:'le2',  category:'legs',            progressionOrder:2, name:'Split Squat',              unit:'reps', targetSets:3, targetReps:10, cue:'Rear foot elevated, optional.' },
+];
+
+const SEED_ROUTINES = [
+  { id:'full-body', name:'Full Body', exerciseIds:['vp1','vpu1','hp1','hpu1','co1','le1'] },
+];
+
+const SEED_ACTIVE = Object.fromEntries(
+  CATEGORIES.map(c => [c.key, SEED_EXERCISES.find(e => e.category === c.key && e.progressionOrder === 1).id])
+);
+
+const DIFFICULTIES = ['easy','moderate','hard'];
+
+/* ============================================================
+   STORAGE MODULE
+   All persistence goes through these functions. To port this
+   app off Claude (e.g. into a Docker-hosted static build), this
+   is the only section that needs to change.
+   ============================================================ */
+
+const NS = 'rungs:v1:';
+
+// Standalone build: persistence via localStorage, so this file works
+// on its own (Safari, a static host, or a Docker container) with no
+// backend and no Claude runtime. To swap in a real backend later,
+// this is the only pair of functions that needs to change.
+async function storageGet(key, fallback){
+  try{
+    const raw = localStorage.getItem(NS + key);
+    return raw ? JSON.parse(raw) : fallback;
+  }catch(e){
+    return fallback;
+  }
+}
+async function storageSet(key, value){
+  try{
+    localStorage.setItem(NS + key, JSON.stringify(value));
+  }catch(e){
+    console.error('storage set failed', key, e);
+  }
+}
+
+async function loadAll(){
+  const [exercises, routines, workouts, active] = await Promise.all([
+    storageGet('exercises', null),
+    storageGet('routines', null),
+    storageGet('workouts', null),
+    storageGet('active', null),
+  ]);
+  const out = {
+    exercises: exercises || SEED_EXERCISES,
+    routines: routines || SEED_ROUTINES,
+    workouts: workouts || [],
+    active: active || SEED_ACTIVE,
+  };
+  if (!exercises) storageSet('exercises', out.exercises);
+  if (!routines) storageSet('routines', out.routines);
+  if (!workouts) storageSet('workouts', out.workouts);
+  if (!active) storageSet('active', out.active);
+  return out;
+}
+
+/* ============================================================
+   DOMAIN LOGIC
+   ============================================================ */
+
+function exercisesByCategory(exercises, category){
+  return exercises
+    .filter(e => e.category === category)
+    .sort((a,b) => a.progressionOrder - b.progressionOrder);
+}
+
+function nextExercise(exercises, exercise){
+  return exercises.find(e => e.category === exercise.category && e.progressionOrder === exercise.progressionOrder + 1) || null;
+}
+
+// Ready-to-advance suggestion: looks at the most recent workout entry
+// logged for this exercise. Suggests advancing if that entry met or
+// beat the target sets/reps and every set felt easy.
+function computeSuggestion(exercise, workouts){
+  const relevant = workouts
+    .filter(w => w.entries.some(en => en.exerciseId === exercise.id))
+    .sort((a,b) => new Date(b.date) - new Date(a.date));
+  if (relevant.length === 0) return { ready:false, lastDate:null };
+  const entry = relevant[0].entries.find(en => en.exerciseId === exercise.id);
+  const ready = entry.sets.length >= exercise.targetSets &&
+    entry.sets.every(s => s.value >= exercise.targetReps && s.difficulty === 'easy');
+  return { ready, lastDate: relevant[0].date };
+}
+
+function fmtDate(iso){
+  const d = new Date(iso);
+  return d.toLocaleDateString(undefined, { month:'short', day:'numeric' });
+}
+
+/* ============================================================
+   COMPONENTS
+   ============================================================ */
+
+function Stepper({ value, unit, onChange, min=0, step=1 }){
+  return html`
+    <div class="stepper">
+      <button type="button" onClick=${() => onChange(Math.max(min, value - step))} aria-label="decrease">−</button>
+      <div class="val">${value} ${unit === 'sec' ? 's' : ''}</div>
+      <button type="button" onClick=${() => onChange(value + step)} aria-label="increase">+</button>
+    </div>
+  `;
+}
+
+function Segmented({ options, value, onChange, colorFor }){
+  return html`
+    <div class="segmented">
+      ${options.map(opt => html`
+        <button
+          type="button"
+          class=${opt === value ? 'on' : ''}
+          style=${opt === value ? `background:${colorFor(opt)};border-color:${colorFor(opt)}` : ''}
+          onClick=${() => onChange(opt)}
+        >${opt}</button>
+      `)}
+    </div>
+  `;
+}
+
+function difficultyColor(d){
+  if (d === 'easy') return 'var(--ready)';
+  if (d === 'hard') return 'var(--danger)';
+  return 'var(--ink-dim)';
+}
+
+function ExerciseLogCard({ exercise, category, pendingSets, onAddSet, onRemoveSet }){
+  const [value, setValue] = useState(exercise.unit === 'sec' ? exercise.targetReps : Math.max(1, Math.round(exercise.targetReps / 2)));
+  const [difficulty, setDifficulty] = useState('moderate');
+  const [toFailure, setToFailure] = useState(false);
+
+  const mySets = pendingSets.filter(s => s.exerciseId === exercise.id);
+
+  return html`
+    <div class="card exercise-card">
+      <div class="ex-head">
+        <div class="ex-name">${exercise.name}</div>
+        <div class="ex-cat" style="background:${category.color};color:var(--bg)">${category.label}</div>
+      </div>
+      <div class="ex-cue">${exercise.cue}</div>
+      <div class="ex-target">TARGET · ${exercise.targetSets} × ${exercise.targetReps}${exercise.unit === 'sec' ? 's' : ''}</div>
+
+      <${Stepper}
+        value=${value}
+        unit=${exercise.unit}
+        onChange=${setValue}
+        step=${exercise.unit === 'sec' ? 5 : 1}
+      />
+
+      <${Segmented}
+        options=${DIFFICULTIES}
+        value=${difficulty}
+        onChange=${setDifficulty}
+        colorFor=${difficultyColor}
+      />
+
+      <label class="failure-toggle">
+        <input type="checkbox" checked=${toFailure} onChange=${e => setToFailure(e.target.checked)} />
+        Taken to failure
+      </label>
+
+      ${mySets.length > 0 && html`
+        <div class="set-chips">
+          ${mySets.map((s, i) => html`
+            <span class="chip ${s.difficulty}" onClick=${() => onRemoveSet(exercise.id, s.uid)}>
+              ${s.value}${exercise.unit === 'sec' ? 's' : ''} · ${s.difficulty}${s.toFailure ? ' · failure' : ''}
+              <span class="x">✕</span>
+            </span>
+          `)}
+        </div>
+      `}
+
+      <button class="btn" onClick=${() => onAddSet(exercise.id, { value, difficulty, toFailure, uid: Math.random().toString(36).slice(2) })}>
+        + Log set
+      </button>
+    </div>
+  `;
+}
+
+function TrainTab({ state, setState }){
+  const { exercises, routines, active, workouts } = state;
+  const [routineId, setRoutineId] = useState(routines[0]?.id || null);
+  const [pendingSets, setPendingSets] = useState([]);
+  const [toast, setToast] = useState(null);
+
+  const routine = routines.find(r => r.id === routineId);
+
+  const slots = useMemo(() => {
+    if (!routine) return [];
+    const cats = new Set();
+    routine.exerciseIds.forEach(id => {
+      const ex = exercises.find(e => e.id === id);
+      if (ex) cats.add(ex.category);
+    });
+    return [...cats].map(catKey => {
+      const activeId = active[catKey];
+      const ex = exercises.find(e => e.id === activeId);
+      return { category: CAT_MAP[catKey], exercise: ex };
+    });
+  }, [routine, exercises, active]);
+
+  function addSet(exerciseId, set){
+    setPendingSets(prev => [...prev, { exerciseId, ...set }]);
+  }
+  function removeSet(exerciseId, uid){
+    setPendingSets(prev => prev.filter(s => !(s.exerciseId === exerciseId && s.uid === uid)));
+  }
+
+  async function finishWorkout(){
+    if (pendingSets.length === 0) return;
+    const entriesByExercise = {};
+    pendingSets.forEach(s => {
+      if (!entriesByExercise[s.exerciseId]) entriesByExercise[s.exerciseId] = [];
+      entriesByExercise[s.exerciseId].push({ value: s.value, difficulty: s.difficulty, toFailure: s.toFailure });
+    });
+    const workout = {
+      id: 'w' + Date.now(),
+      routineId,
+      date: new Date().toISOString(),
+      entries: Object.entries(entriesByExercise).map(([exerciseId, sets]) => ({ exerciseId, sets })),
+    };
+    const nextWorkouts = [...workouts, workout];
+    await storageSet('workouts', nextWorkouts);
+    setState(s => ({ ...s, workouts: nextWorkouts }));
+    setPendingSets([]);
+    setToast('Workout saved');
+    setTimeout(() => setToast(null), 2200);
+  }
+
+  if (routines.length === 0){
+    return html`<div class="empty-state">No routines yet. Create one in the Routines tab.</div>`;
+  }
+
+  return html`
+    <div>
+      <div class="routine-picker">
+        <label class="field-label">Routine</label>
+        <select value=${routineId} onChange=${e => { setRoutineId(e.target.value); setPendingSets([]); }}>
+          ${routines.map(r => html`<option value=${r.id}>${r.name}</option>`)}
+        </select>
+      </div>
+
+      ${slots.map(({ category, exercise }) => exercise && html`
+        <${ExerciseLogCard}
+          key=${exercise.id}
+          exercise=${exercise}
+          category=${category}
+          pendingSets=${pendingSets}
+          onAddSet=${addSet}
+          onRemoveSet=${removeSet}
+        />
+      `)}
+
+      <div class="finish-bar">
+        <button class="btn primary" disabled=${pendingSets.length === 0} onClick=${finishWorkout}>
+          Finish workout ${pendingSets.length > 0 ? `(${pendingSets.length} sets)` : ''}
+        </button>
+      </div>
+
+      ${toast && html`<div class="toast">${toast}</div>`}
+    </div>
+  `;
+}
+
+function Rung({ exercise, isActive, isPassed, category, suggestion, hasNext, onAdvance }){
+  const classes = ['rung'];
+  if (isPassed) classes.push('passed');
+  if (isActive) classes.push('current');
+  if (!isActive && !isPassed) classes.push('locked');
+  if (isActive && suggestion?.ready) classes.push('suggested');
+
+  return html`
+    <div class="${classes.join(' ')}" style="--cat-color:${category.color}">
+      <div class="r-top">
+        <div class="r-name">${exercise.name}</div>
+        <div class="r-target">${exercise.targetSets}×${exercise.targetReps}${exercise.unit === 'sec' ? 's' : ''}</div>
+      </div>
+      ${isActive && html`
+        <div class="r-status ${suggestion?.ready ? 'ready' : ''}">
+          ${suggestion?.lastDate
+            ? (suggestion.ready ? '✓ Ready to advance' : `Last logged ${fmtDate(suggestion.lastDate)}`)
+            : 'Not logged yet'}
+        </div>
+      `}
+      ${isActive && hasNext && html`
+        <div class="r-advance">
+          <button class="btn ${suggestion?.ready ? 'primary' : 'ghost'}" onClick=${onAdvance}>
+            Advance →
+          </button>
+        </div>
+      `}
+    </div>
+  `;
+}
+
+function ProgressTab({ state, setState }){
+  const { exercises, active, workouts } = state;
+
+  async function advance(catKey, currentExercise){
+    const nxt = nextExercise(exercises, currentExercise);
+    if (!nxt) return;
+    const nextActive = { ...active, [catKey]: nxt.id };
+    await storageSet('active', nextActive);
+    setState(s => ({ ...s, active: nextActive }));
+  }
+
+  return html`
+    <div>
+      ${CATEGORIES.map(cat => {
+        const chain = exercisesByCategory(exercises, cat.key);
+        const activeId = active[cat.key];
+        const activeIdx = chain.findIndex(e => e.id === activeId);
+        return html`
+          <div class="category-block" key=${cat.key}>
+            <div class="category-header">
+              <div class="category-dot" style="background:${cat.color}"></div>
+              <div class="cname">${cat.label}</div>
+            </div>
+            <div class="ladder">
+              ${chain.map((ex, idx) => {
+                const isActive = idx === activeIdx;
+                const isPassed = idx < activeIdx;
+                const suggestion = isActive ? computeSuggestion(ex, workouts) : null;
+                const hasNext = !!nextExercise(exercises, ex);
+                return html`
+                  <${Rung}
+                    key=${ex.id}
+                    exercise=${ex}
+                    isActive=${isActive}
+                    isPassed=${isPassed}
+                    category=${cat}
+                    suggestion=${suggestion}
+                    hasNext=${hasNext}
+                    onAdvance=${() => advance(cat.key, ex)}
+                  />
+                `;
+              })}
+            </div>
+          </div>
+        `;
+      })}
+    </div>
+  `;
+}
+
+function RoutinesTab({ state, setState }){
+  const { exercises, routines } = state;
+  const [showForm, setShowForm] = useState(false);
+  const [name, setName] = useState('');
+  const [selected, setSelected] = useState({});
+
+  function toggle(id){
+    setSelected(prev => ({ ...prev, [id]: !prev[id] }));
+  }
+
+  async function saveRoutine(){
+    const ids = Object.entries(selected).filter(([,v]) => v).map(([k]) => k);
+    if (!name.trim() || ids.length === 0) return;
+    const routine = { id: 'r' + Date.now(), name: name.trim(), exerciseIds: ids };
+    const nextRoutines = [...routines, routine];
+    await storageSet('routines', nextRoutines);
+    setState(s => ({ ...s, routines: nextRoutines }));
+    setName('');
+    setSelected({});
+    setShowForm(false);
+  }
+
+  return html`
+    <div>
+      ${routines.map(r => html`
+        <div class="card routine-card" key=${r.id}>
+          <div class="r-title">${r.name}</div>
+          <div class="r-list">
+            ${r.exerciseIds.map(id => {
+              const ex = exercises.find(e => e.id === id);
+              return ex && html`<span class="r-item">${ex.name}</span>`;
+            })}
+          </div>
+        </div>
+      `)}
+
+      ${!showForm && html`
+        <button class="btn" onClick=${() => setShowForm(true)}>+ New routine</button>
+      `}
+
+      ${showForm && html`
+        <div class="card new-routine-form">
+          <label class="field-label">Routine name</label>
+          <input type="text" value=${name} onInput=${e => setName(e.target.value)} placeholder="e.g. Push Day" style="margin-bottom:14px" />
+
+          ${CATEGORIES.map(cat => html`
+            <div class="cat-group" key=${cat.key}>
+              <div class="cat-group-label" style="color:${cat.color}">${cat.label}</div>
+              ${exercisesByCategory(exercises, cat.key).map(ex => html`
+                <label class="checkbox-row">
+                  <input type="checkbox" checked=${!!selected[ex.id]} onChange=${() => toggle(ex.id)} />
+                  ${ex.name}
+                </label>
+              `)}
+            </div>
+          `)}
+
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn ghost" onClick=${() => { setShowForm(false); setName(''); setSelected({}); }}>Cancel</button>
+            <button class="btn primary" onClick=${saveRoutine}>Save routine</button>
+          </div>
+        </div>
+      `}
+    </div>
+  `;
+}
+
+function App(){
+  const [state, setState] = useState(null);
+  const [tab, setTab] = useState('train');
+
+  useEffect(() => {
+    loadAll().then(setState);
+  }, []);
+
+  if (!state){
+    return html`<div class="empty-state">Loading…</div>`;
+  }
+
+  return html`
+    <${Fragment}>
+      <header class="top">
+        <div class="brand">RUNG<span>S</span></div>
+        <div class="tagline">Calisthenics progression tracker</div>
+      </header>
+      <main>
+        ${tab === 'train' && html`<${TrainTab} state=${state} setState=${setState} />`}
+        ${tab === 'progress' && html`<h2 class="section-title">Progress</h2><${ProgressTab} state=${state} setState=${setState} />`}
+        ${tab === 'routines' && html`<h2 class="section-title">Routines</h2><${RoutinesTab} state=${state} setState=${setState} />`}
+      </main>
+      <nav class="tabs">
+        <button class=${tab === 'train' ? 'active' : ''} onClick=${() => setTab('train')}>Train</button>
+        <button class=${tab === 'progress' ? 'active' : ''} onClick=${() => setTab('progress')}>Progress</button>
+        <button class=${tab === 'routines' ? 'active' : ''} onClick=${() => setTab('routines')}>Routines</button>
+      </nav>
+    <//>
+  `;
+}
+
+render(html`<${App} />`, document.getElementById('app'));
+</script>
+</body>
+</html>
